@@ -1,0 +1,11 @@
+-- REVIEW TEMPLATE ONLY. Do not run against a personal server without explicit approval.
+-- First confirm SELECT VERSION(), @@version_comment; SELECT DATABASE(); SHOW GRANTS;
+-- Administrator provisions only NEW dedicated objects, never IF NOT EXISTS over an unknown existing DB.
+-- Replace ACCOUNT_HOST with the specific application host/network as narrowly as possible.
+-- Replace password placeholders locally; never save real credentials in a tracked file.
+CREATE DATABASE mytoeic CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'mytoeic_migrator'@'ACCOUNT_HOST' IDENTIFIED BY 'CHANGE_ME_MIGRATION_PASSWORD';
+CREATE USER 'mytoeic_app'@'ACCOUNT_HOST' IDENTIFIED BY 'CHANGE_ME_APP_PASSWORD';
+GRANT SELECT, INSERT, UPDATE, CREATE, ALTER, INDEX, REFERENCES ON mytoeic.* TO 'mytoeic_migrator'@'ACCOUNT_HOST';
+-- No runtime privileges until tables are migrated; apply runtime-grants.sql afterward.
+-- No global GRANT, no DROP, no GRANT OPTION, no modification to other databases.

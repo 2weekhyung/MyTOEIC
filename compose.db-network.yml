@@ -1,0 +1,12 @@
+# Optional overlay for an existing MySQL container on a user-defined Docker network.
+# Does not create/restart/reconfigure the database container or the existing network.
+# Use with: -f compose.existing-db.yml -f compose.db-network.yml
+services:
+  backend:
+    networks:
+      - default
+      - existing-db
+networks:
+  existing-db:
+    external: true
+    name: ${DB_DOCKER_NETWORK:?Set DB_DOCKER_NETWORK to the existing database network in .env}

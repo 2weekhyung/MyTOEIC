@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MyToeicApplication (local)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="mytoeic.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.mytoeic.MyToeicApplication" />
+    <option name="ACTIVE_PROFILES" value="local" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,0 +1,53 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 10000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        default_batch_fetch_size: 50
+  flyway:
+    enabled: ${DB_MIGRATE:false}
+    clean-disabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    create-schemas: false
+    user: ${DB_MIGRATION_USERNAME:}
+    password: ${DB_MIGRATION_PASSWORD:}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 14d
+      cookie:
+        http-only: true
+        secure: ${COOKIE_SECURE:true}
+        same-site: lax
+        max-age: 14d
+  error:
+    include-message: never
+    include-stacktrace: never
+mytoeic:
+  bootstrap:
+    enabled: ${BOOTSTRAP_ENABLED:false}
+    username: ${BOOTSTRAP_USERNAME:}
+    password: ${BOOTSTRAP_PASSWORD:}
+  recommendation:
+    weak-threshold: ${WEAK_THRESHOLD:0.60}
+    consecutive-errors: ${CONSECUTIVE_ERRORS:2}
+    minimum-attempts: ${MINIMUM_ATTEMPTS:5}
+    mastery-threshold: ${MASTERY_THRESHOLD:0.80}
+  review:
+    intervals-days: ${REVIEW_INTERVALS:1,3,7,14,30}

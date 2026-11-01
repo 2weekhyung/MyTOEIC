@@ -1,0 +1,12 @@
+-- REVIEW TEMPLATE: user approval is required before applying on a real server.
+-- The dedicated mytoeic database must already exist. This does not CREATE DATABASE.
+-- Replace ACCOUNT_HOST with the approved client CIDR, after verifying the Docker subnet.
+-- Run as one mysql batch WITHOUT --force; stop on the first failure, including an existing account.
+-- RANDOM PASSWORD prints generated credentials to the operator: save them privately, never in Git/chat.
+-- CREATE USER statements deliberately do not use IF NOT EXISTS or ALTER existing accounts.
+CREATE USER 'mytoeic_migrator'@'ACCOUNT_HOST' IDENTIFIED BY RANDOM PASSWORD;
+CREATE USER 'mytoeic_app'@'ACCOUNT_HOST' IDENTIFIED BY RANDOM PASSWORD;
+GRANT SELECT, INSERT, UPDATE, CREATE, ALTER, INDEX, REFERENCES ON mytoeic.* TO 'mytoeic_migrator'@'ACCOUNT_HOST';
+-- App table permissions are granted from runtime-grants.sql after approved migrations.
+SHOW GRANTS FOR 'mytoeic_migrator'@'ACCOUNT_HOST';
+SHOW GRANTS FOR 'mytoeic_app'@'ACCOUNT_HOST';

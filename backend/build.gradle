@@ -1,0 +1,88 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.16'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.mytoeic'
+version = '0.3.0'
+java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+repositories { mavenCentral() }
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'com.h2database:h2'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mysql'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+tasks.named('test') {
+    useJUnitPlatform { excludeTags 'mysql' }
+}
+tasks.register('mysqlTest', Test) {
+    description = 'Real MySQL migration, API and preservation tests (Docker required)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'mysql' }
+    dependsOn tasks.named('bootJar')
+    systemProperty 'mytoeic.jar', tasks.named('bootJar').get().archiveFile.get().asFile.absolutePath
+    shouldRunAfter test
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.named('processResources') {
+    from('../frontend/dist') { into 'static' }
+    // Fresh Git checkouts use the public example; the personal YAML is intentionally ignored.
+    if (!file('src/main/resources/application.yml').exists()) {
+        from('src/main/resources/application.yml.example') { rename { 'application.yml' } }
+    }
+}
+tasks.named('bootJar') {
+    doFirst {
+        if (!file('../frontend/dist/index.html').exists()) throw new GradleException('먼저 frontend에서 npm ci 및 npm run build를 실행하세요.');
+    }
+    // Local classes use the literal personal YAML. Distributable JARs use the public template.
+    def personalResource = layout.buildDirectory.file('resources/main/application.yml')
+    eachFile { entry ->
+        if (entry.path == 'BOOT-INF/classes/application.yml' && entry.file.canonicalFile == personalResource.get().asFile.canonicalFile) {
+            entry.exclude()
+        }
+    }
+    from('src/main/resources/application.yml.example') {
+        into 'BOOT-INF/classes'
+        rename { 'application.yml' }
+    }
+}
+tasks.named('bootRun') {
+    systemProperty 'spring.profiles.active', providers.environmentVariable('SPRING_PROFILES_ACTIVE').getOrElse('local')
+}
+sourceSets.test.resources.srcDir('../infra/mysql')
+
+tasks.register('dbCheck', JavaExec) {
+    group = 'database'
+    description = 'Read-only server DB check; creates no tables or data'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.mytoeic.config.DatabaseConnectionCheck'
+    args providers.gradleProperty('dbRole').getOrElse('migration')
+}
+tasks.register('dbMigrate', JavaExec) {
+    group = 'database'
+    description = 'Explicitly apply approved Flyway migrations and seeds using the separate migration account'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.mytoeic.config.MigrationCommand'
+}
+tasks.register('webTestRun', JavaExec) {
+    group = 'verification'
+    description = 'Browser QA only: isolated in-memory H2, never the personal server DB'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.mytoeic.MyToeicApplication'
+    args '--spring.profiles.active=test', '--server.address=127.0.0.1', '--server.port=18081', '--spring.jpa.properties.hibernate.generate_statistics=false'
+}

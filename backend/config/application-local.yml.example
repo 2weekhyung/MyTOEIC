@@ -1,0 +1,10 @@
+# Copy to application-local.yml in this directory. The real file is ignored by Git and Docker builds.
+spring:
+  datasource:
+    url: 'jdbc:mysql://SERVER_ADDRESS:3306/mytoeic?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&sslMode=REQUIRED&connectTimeout=5000&socketTimeout=15000'
+    username: mytoeic_app
+    password: 'CHANGE_ME_APP_PASSWORD'
+  flyway:
+    enabled: false
+    user: mytoeic_migrator
+    password: 'CHANGE_ME_MIGRATION_PASSWORD'
